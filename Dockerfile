@@ -45,14 +45,11 @@ RUN wget https://s3.amazonaws.com/files.drush.org/drush.phar -O /usr/bin/drush &
 
 RUN a2enmod rewrite
 
-#COMPOSER
-#RUN wget https://getcomposer.org/download/1.4.1/composer.phar -O /usr/bin/composer && chmod +x /usr/bin/composer
-#RUN mkdir /composer
-
-#VIM
-RUN apt-get install -y vim
-#NET-TOOLS
-RUN apt-get install -y net-tools
+RUN version=$(php -r "echo PHP_MAJOR_VERSION.PHP_MINOR_VERSION;") \
+    && curl -A "Docker" -o /tmp/blackfire-probe.tar.gz -D - -L -s https://blackfire.io/api/v1/releases/probe/php/linux/amd64/$version \
+    && tar zxpf /tmp/blackfire-probe.tar.gz -C /tmp \
+    && mv /tmp/blackfire-*.so $(php -r "echo ini_get('extension_dir');")/blackfire.so \
+    && printf "extension=blackfire.so\nblackfire.agent_socket=tcp://blackfire:8707\n" > $PHP_INI_DIR/conf.d/blackfire.ini
 
 RUN apt-get clean && rm -rf /vsar/lib/apt/lists/* /tmp/* /var/tmp/*
 
